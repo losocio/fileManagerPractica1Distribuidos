@@ -38,7 +38,7 @@ typedef struct __attribute__((packed)){
 
 /*
 This function is used to pack data into a vector
-If the function is called again on the same vector,
+If the function is called again on the same vector
 the new data will be appended to the end of the vector
 */
 template<typename T>

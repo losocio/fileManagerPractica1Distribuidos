@@ -12,40 +12,39 @@ For some reason, the communications are only packaged and then unpackaged
 in a client to server communication and not vice versa
 */
 
-void attendOperation(int clientId){ //TODO copied code, needs modification
+void handleOperation(int clientId){ //TODO copied code, needs modification
 	std::vector<unsigned char> rpcIn;
 	
 	recvMSG(clientId, rpcIn);
 
-	operacion_t op=unpackOperation(rpcIn);
+	fileOperacion_t op=unpackOperation(rpcIn);
 	
 	FileManager *fm=new FileManager(FILEMANAGERPATH);
 
 	switch(op.operationType){
-		case opListFiles: //TODO generated code
+		case opListFiles: //TODO generated code, but i think its done
 		{
 			std::vector<std::string*>* listedFiles;
 			listedFiles=fm->listFiles();
-			sendMSG(clientId, listedFiles);
+			sendMSG(clientId, listedFiles); //TODO might have to use &listedFiles or some other reference
 
 			fm->freeListedFiles(listedFiles);
 		}break;
 
 		case opReadFile: //TODO generated code
 		{
-			std::string res;
-			fm->readFile(op.readFile.fileName,,);
-			//void readFile(char* fileName, char* &data, unsigned long int & dataLength);
-			sendMSG(clientId,res);
+			std::string readFile;
+			fm->readFile(&op.readFile.fileName, , &op.readFile.dataLength);
+			//void readFile(char* fileName, char* &data, unsigned long int &dataLength);
+			sendMSG(clientId, readFile);
 		}break;
 
 		case opWriteFile: //TODO generated code
-		{
+		{ 	//TODO last parameter is correct, still have to figure out the rest
 			fm->writeFile(op.writeFile.fileName, op.writeFile.data, op.writeFile.dataLength);
 			//void writeFile(char* fileName, char* data, unsigned long int dataLength);
 		}break;
 
-		
 		default:
 		{	
 			std::cout<<"Error: función no definida\n";
@@ -66,12 +65,9 @@ int main(int argc, char** argv)
             usleep(1000);
         }
 		
-		
         int clientId=getLastClientID();
 
-        
-	    attendOperation(clientId);
-        
+	    handleOperation(clientId);
 
 	    closeConnection(clientId);
     }
