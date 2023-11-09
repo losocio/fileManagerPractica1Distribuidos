@@ -5,31 +5,44 @@
 #include "fileOperations.h"
 #include "filemanager.h"
 
+#define FILEMANAGERPATH "./dirprueba/"
+
+/*
+For some reason, the communications are only packaged and then unpackaged
+in a client to server communication and not vice versa
+*/
 
 void attendOperation(int clientId){ //TODO copied code, needs modification
 	std::vector<unsigned char> rpcIn;
-	// Se usa recvMSG() para en recibir y guardar los datos de la operacion (como su tipo, etc). Dichos datos se guardan en el vector rpcIn
+	
 	recvMSG(clientId, rpcIn);
-	// Se utiliza desempaquetaOperacion() para sacar el objeto de tipo operacion_t del mensaje recibido
+
 	operacion_t op=unpackOperation(rpcIn);
-	   
-	// Se realiza el computo dependiendo del tipo de operacion que nos pida el cliente
+	
+	FileManager *fm=new FileManager(FILEMANAGERPATH);
+
 	switch(op.operationType){
-		case opListFiles://TODO generated code
+		case opListFiles: //TODO generated code
 		{
-			std::vector<std::string> res;
-			res=listFiles();
+			std::vector<std::string*>* listedFiles;
+			listedFiles=fm->listFiles();
+			sendMSG(clientId, listedFiles);
+
+			fm->freeListedFiles(listedFiles);
+		}break;
+
+		case opReadFile: //TODO generated code
+		{
+			std::string res;
+			fm->readFile(op.readFile.fileName,,);
+			//void readFile(char* fileName, char* &data, unsigned long int & dataLength);
 			sendMSG(clientId,res);
 		}break;
 
-		case opReadFile:
+		case opWriteFile: //TODO generated code
 		{
-
-		}break;
-
-		case opWriteFile:
-		{
-
+			fm->writeFile(op.writeFile.fileName, op.writeFile.data, op.writeFile.dataLength);
+			//void writeFile(char* fileName, char* data, unsigned long int dataLength);
 		}break;
 
 		
@@ -44,16 +57,16 @@ void attendOperation(int clientId){ //TODO copied code, needs modification
 int main(int argc, char** argv)
 {
 
-    //auto serverSocket=initServer(60000); //Not usre why out is 
+    //auto serverSocket=initServer(60000); //Not sure why aout is used here
 	int serverSocket=initServer(60000);
 
     while(1){
-		// Esperar conexiones en puerto
+		
         while(!checkClient()){
             usleep(1000);
         }
 		
-		// Una vez hay conexion, se atienden las peticiones del cliente 
+		
         int clientId=getLastClientID();
 
         
