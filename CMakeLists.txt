@@ -1,5 +1,7 @@
 cmake_minimum_required (VERSION 2.8.11)
 
-project (fileManager)
+project (clientFileManager)
+add_executable (clientFileManager filemanager.cpp filemanager.h utils.cpp utils.h client.cpp fileOperations.h)
 
-add_executable (fileManager main_fm.cpp filemanager.cpp filemanager.h)
+project (serverFileManager)
+add_executable (serverFileManager filemanager.cpp filemanager.h utils.cpp utils.h server.cpp fileOperations.h)

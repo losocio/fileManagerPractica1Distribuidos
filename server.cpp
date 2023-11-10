@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
+#include <string> //TODO might not be needed
+#include <vector>
 #include "utils.h"
 #include "fileOperations.h"
 #include "filemanager.h"
@@ -17,32 +19,37 @@ void handleOperation(int clientId){ //TODO copied code, needs modification
 	
 	recvMSG(clientId, rpcIn);
 
-	fileOperacion_t op=unpackOperation(rpcIn);
+	fileOperation_t op=unpackOperation(rpcIn);
 	
 	FileManager *fm=new FileManager(FILEMANAGERPATH);
 
-	switch(op.operationType){
+	switch(op.opType){
 		case opListFiles: //TODO generated code, but i think its done
-		{
+		{	
 			std::vector<std::string*>* listedFiles;
+			//std::vector<std::string*> listedFiles; //TODO might break something later on and need to be like the previous line
 			listedFiles=fm->listFiles();
-			sendMSG(clientId, listedFiles); //TODO might have to use &listedFiles or some other reference
+			sendMSG(clientId, *listedFiles); //TODO might have to use &listedFiles or some other reference, probably related to previous comment
 
 			fm->freeListedFiles(listedFiles);
 		}break;
 
 		case opReadFile: //TODO generated code
 		{
+			/*
 			std::string readFile;
 			fm->readFile(&op.readFile.fileName, , &op.readFile.dataLength);
 			//void readFile(char* fileName, char* &data, unsigned long int &dataLength);
 			sendMSG(clientId, readFile);
+			*/
+			std::cout<<"Read file operation\n";
 		}break;
 
 		case opWriteFile: //TODO generated code
 		{ 	//TODO last parameter is correct, still have to figure out the rest
-			fm->writeFile(op.writeFile.fileName, op.writeFile.data, op.writeFile.dataLength);
+			//fm->writeFile(op.writeFile.fileName, op.writeFile.data, op.writeFile.dataLength);
 			//void writeFile(char* fileName, char* data, unsigned long int dataLength);
+			std::cout<<"Write file operation\n";
 		}break;
 
 		default:

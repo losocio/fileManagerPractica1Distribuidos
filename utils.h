@@ -91,7 +91,7 @@ int getLastClientID();
 // map funciona con clave-valor
 extern std::map<unsigned int,connection_t> clientList;
 
-// template function have to ve defined in the header file
+// template functions have to be defined in the header file
 template<typename t>
 void recvMSG(int clientID, std::vector<t> &data){
 

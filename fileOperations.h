@@ -1,24 +1,31 @@
 #pragma once
 #include <vector>
+#include <string>
 
-typedef enum{
+typedef enum fileOperationsEnum_t{
     opListFiles=1,
     opReadFile=2,
     opWriteFile=3
-}fileOperationsEnum;
+}fileOperationsEnum_t;
 
+/*
+The reason why the default constructor and copy constructor are deleted by the compiler is because 
+the struct contains a union with a std::string member.
+In C++, if a struct or class contains a member that has a non-trivial default and copy constructors (like std::string),
+the compiler will not automatically generate a default and copy constructors for the struct or class.
+This is why you need to define a default constructor and a copy constructor for fileOperation_t yourself
+*/
 
-typedef struct __attribute__((packed)){
+//typedef struct __attribute__((packed)){ //TODO I get a warning using this
+typedef struct fileOperation_t{
     //Operation type
-    fileOperationsEnum operationType;
+    fileOperationsEnum_t opType;
     
     //Operation parameters and data
     union{
-
-        struct{ //No parameters
-            
-        }listFiles;
-
+        
+        struct{}listFiles; //No parameters
+        
         struct{
             std::string fileName;
         }readFile;
@@ -26,9 +33,52 @@ typedef struct __attribute__((packed)){
         struct{
             std::string fileName;
             std::string data;
-            unsigned long int dataLength; //TODO might be unnecessary
+            unsigned long int dataLength;
         }writeFile;
     };
+    
+    //Default constructor
+    fileOperation_t(){
+        opType=opListFiles;
+        readFile.fileName="";
+        writeFile.fileName="";  
+        writeFile.data="";
+        writeFile.dataLength=0;
+    }
+    
+    //Copy constructor
+    //Not the way I would like it but it will be unused
+    fileOperation_t(const fileOperation_t& other)
+    : opType(other.opType)
+    {
+        switch (opType) {
+            case opListFiles:
+            {
+                //Nothing to copy
+            }break;
+            
+            case opReadFile:
+            {
+                readFile.fileName = other.readFile.fileName;
+            }break;
+
+            case opWriteFile:
+            {
+                writeFile.fileName = other.writeFile.fileName;
+                writeFile.data = other.writeFile.data;
+                writeFile.dataLength = other.writeFile.dataLength;
+            }break;
+            
+            default:
+            {
+                std::cout<<"Error: función no definida\n";
+            }
+        }
+    }
+
+    //Default destructor
+    ~fileOperation_t(){}
+
 }fileOperation_t;
 
 
@@ -55,11 +105,11 @@ inline void pack(std::vector<unsigned char> &packet, T data){
 inline void packOperation(std::vector<unsigned char> &packet, fileOperation_t op){
 
     //Pack the operation type
-    unsigned char opType=op.operacionType;
+    unsigned char opType=op.opType;
 	pack(packet, opType);
 
     //Pack the data depending on the operation type
-    switch(op.operationType){
+    switch(op.opType){
         case opListFiles: 
         {
             //In this case there is no data to pack
@@ -114,9 +164,9 @@ inline fileOperation_t unpackOperation(std::vector<unsigned char> &packet){
 	
     fileOperation_t op;
 	unsigned char opType=unpack<unsigned char>(packet);
-	op.operationType=(fileOperationsEnum)opType;
+	op.opType=(fileOperationsEnum_t)opType;
 	
-	switch(op.operationType){
+	switch(op.opType){
         case opListFiles:
         {
             //In this case there is no data to unpack
@@ -126,14 +176,14 @@ inline fileOperation_t unpackOperation(std::vector<unsigned char> &packet){
 
         case opReadFile: 
         {   
-            op.opReadFile.fileName=unpack<std::string>(packet);
+            op.readFile.fileName=unpack<std::string>(packet);
         }break;
 
         case opWriteFile: 
         {
-            op.opWriteFile.fileName=unpack<std::string>(packet);
-            op.opWriteFile.data=unpack<std::string>(packet);
-            op.opWriteFile.dataLength=unpack<unsigned long int>(packet); //TODO might be unnecessary
+            op.writeFile.fileName=unpack<std::string>(packet);
+            op.writeFile.data=unpack<std::string>(packet);
+            op.writeFile.dataLength=unpack<unsigned long int>(packet); //TODO might be unnecessary
         }break;
 
         default:
