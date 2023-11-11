@@ -157,10 +157,17 @@ void recvMSG(int clientID, std::vector<t> &data){
 
 
 /** precondiciones, variables, etc...**/
-// template function have to ve defined in the header file
+// template function have to be defined in the header file
 template<typename t>
 void sendMSG(int clientID, std::vector<t> &data){
+    //TODO
+    for (auto elem : data) {
 
+        std::cout << elem << " ";
+    }
+    std::cout << std::endl;
+
+    //std::cout<<"In sendMSG()"<<data<<"\n"; //TODO
     int dataLen=data.size()*sizeof(t);
     connection_t connection=clientList[clientID];
 

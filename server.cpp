@@ -34,20 +34,30 @@ void handleOperation(int clientId){ //TODO copied code, needs modification
 		case opListFiles: //TODO generated code, but i think its done
 		{	
 			std::vector<std::string*>* listedFiles=fm->listFiles();
+			
+			auto listedFilesAuto=fm->listFiles();
+			/*
+			for (auto elem : listedFilesAuto) {
+        		std::cout << elem << " ";
+    		}
+    			std::cout << std::endl;
+			*/
 			//std::vector<std::string*> listedFiles; //TODO might break something later on and need to be like the previous line
 
-			std::cout<<"server.cpp: In case opListFiles: listedFiles reference="<<listedFiles<<"\n"; //TODO
+			//std::cout<<"server.cpp: In case opListFiles: listedFiles reference="<<listedFiles<<"\n"; //TODO
 			std::cout<<"assuming listedFiles is correct cause making printer is tedious\n"; //TODO
 
-			sendMSG(clientId, **listedFiles); //TODO mismatched type, gotta check it
-			//sendMSG(clientId, *listedFiles); //TODO how it was before, wrong
+			//sendMSG(clientId, listedFiles); //TODO mismatched type, gotta check it
+			//sendMSG(clientId, *listedFiles); //TODO how it was before, wrong copilot suggestion
 
+			std::cout<<"sendMSG() succesful\n";
 			/*
+			//TODO generated code
 			std::vector<unsigned char> serializedList = vectorToString(*listedFiles);
 			sendMSG(clientId, serializedList);
 			*/
 
-			fm->freeListedFiles(listedFiles);
+			//fm->freeListedFiles(listedFiles);
 
 			//TODO testing
 			std::cout<<"List files operation succesful\n";
