@@ -19,37 +19,62 @@ void handleOperation(int clientId){ //TODO copied code, needs modification
 	
 	recvMSG(clientId, rpcIn);
 
-	fileOperation_t op=unpackOperation(rpcIn);
+	//fileOperation_t op;
+	//op=unpackOperation(rpcIn);
+
+	//TODO this might not work
+	FileOperation *op=unpackOperation(rpcIn);
+	//FileOperation *op=new FileOperation();
+	//op=unpackOperation(rpcIn);
 	
 	FileManager *fm=new FileManager(FILEMANAGERPATH);
-
-	switch(op.opType){
+	std::cout<<"server.cpp: op->opType: "<<op->opType<<"\n"; //TODO
+	//switch(op.opType){
+	switch(op->opType){
 		case opListFiles: //TODO generated code, but i think its done
 		{	
-			std::vector<std::string*>* listedFiles;
+			std::vector<std::string*>* listedFiles=fm->listFiles();
 			//std::vector<std::string*> listedFiles; //TODO might break something later on and need to be like the previous line
-			listedFiles=fm->listFiles();
-			sendMSG(clientId, *listedFiles); //TODO might have to use &listedFiles or some other reference, probably related to previous comment
+
+			std::cout<<"server.cpp: In case opListFiles: listedFiles reference="<<listedFiles<<"\n"; //TODO
+			std::cout<<"assuming listedFiles is correct cause making printer is tedious\n"; //TODO
+
+			sendMSG(clientId, **listedFiles); //TODO mismatched type, gotta check it
+			//sendMSG(clientId, *listedFiles); //TODO how it was before, wrong
+
+			/*
+			std::vector<unsigned char> serializedList = vectorToString(*listedFiles);
+			sendMSG(clientId, serializedList);
+			*/
 
 			fm->freeListedFiles(listedFiles);
+
+			//TODO testing
+			std::cout<<"List files operation succesful\n";
 		}break;
 
 		case opReadFile: //TODO generated code
 		{
 			/*
+			//TODO change op. to op->
 			std::string readFile;
 			fm->readFile(&op.readFile.fileName, , &op.readFile.dataLength);
 			//void readFile(char* fileName, char* &data, unsigned long int &dataLength);
 			sendMSG(clientId, readFile);
 			*/
-			std::cout<<"Read file operation\n";
+
+			//TODO testing
+			std::cout<<"Read file operation succesful\n";
 		}break;
 
 		case opWriteFile: //TODO generated code
 		{ 	//TODO last parameter is correct, still have to figure out the rest
+			//TODO change op. to op->
 			//fm->writeFile(op.writeFile.fileName, op.writeFile.data, op.writeFile.dataLength);
 			//void writeFile(char* fileName, char* data, unsigned long int dataLength);
-			std::cout<<"Write file operation\n";
+			
+			//TODO testing
+			std::cout<<"Write file operation succesful\n";
 		}break;
 
 		default:
@@ -60,13 +85,11 @@ void handleOperation(int clientId){ //TODO copied code, needs modification
 }
 
 
-int main(int argc, char** argv)
-{
-
-    //auto serverSocket=initServer(60000); //Not sure why aout is used here
+int main(int argc, char** argv){
+    //auto serverSocket=initServer(60000); //Not sure why auto is used here
 	int serverSocket=initServer(60000);
 
-    while(1){
+    while(true){
 		
         while(!checkClient()){
             usleep(1000);

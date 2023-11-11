@@ -95,7 +95,6 @@ extern std::map<unsigned int,connection_t> clientList;
 template<typename t>
 void recvMSG(int clientID, std::vector<t> &data){
 
-
     connection_t connection=clientList[clientID];
 
     int socket= connection.socket;
@@ -121,27 +120,29 @@ void recvMSG(int clientID, std::vector<t> &data){
 
     int bufferSize=0;
     read(socket, &bufferSize, sizeof(int));
-    DEBUG_MSG("DatosLeidos : %d\n",bufferSize);
+    DEBUG_MSG("DatosLeidos : %d\n",bufferSize); //TODO will probably comment this out later
 
     msg=ACK;
     write(socket,&msg,sizeof(char));
 
+    std::cout<<"recvMSG: After DatosLeidos 1\n"; //TODO
 
     int numElements=bufferSize/sizeof(t);
     data.resize(numElements);
     int remaining=bufferSize;
     int idxIn=0;
+    std::cout<<"recvMSG: After DatosLeidos 1.5\n"; //TODO
     while(remaining>0)
     {
         int bufferSizeBlock=read(socket, &(data.data()[bufferSize-remaining]),remaining);
         remaining-=bufferSizeBlock;        
     }
-    
+    std::cout<<"recvMSG: After DatosLeidos 2 after while\n"; //TODO
     if(remaining!=0)
     {
        printf("ERROR: recvMSG -- line : %d error datos no concuerdan %d leidos, %d esperados\n", __LINE__,remaining,bufferSize);
     }
-
+    std::cout<<"recvMSG: After DatosLeidos 3 after if\n"; //TODO
     write(socket,&bufferSize,sizeof(int));
 
     read(socket, &msg, sizeof(char));
