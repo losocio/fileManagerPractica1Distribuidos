@@ -125,24 +125,24 @@ void recvMSG(int clientID, std::vector<t> &data){
     msg=ACK;
     write(socket,&msg,sizeof(char));
 
-    std::cout<<"recvMSG: After DatosLeidos 1\n"; //TODO
+    //std::cout<<"recvMSG: After DatosLeidos 1\n"; //TODO
 
     int numElements=bufferSize/sizeof(t);
     data.resize(numElements);
     int remaining=bufferSize;
     int idxIn=0;
-    std::cout<<"recvMSG: After DatosLeidos 1.5\n"; //TODO
+    //std::cout<<"recvMSG: After DatosLeidos 1.5\n"; //TODO
     while(remaining>0)
     {
         int bufferSizeBlock=read(socket, &(data.data()[bufferSize-remaining]),remaining);
         remaining-=bufferSizeBlock;        
     }
-    std::cout<<"recvMSG: After DatosLeidos 2 after while\n"; //TODO
+    //std::cout<<"recvMSG: After DatosLeidos 2 after while\n"; //TODO
     if(remaining!=0)
     {
        printf("ERROR: recvMSG -- line : %d error datos no concuerdan %d leidos, %d esperados\n", __LINE__,remaining,bufferSize);
     }
-    std::cout<<"recvMSG: After DatosLeidos 3 after if\n"; //TODO
+    //std::cout<<"recvMSG: After DatosLeidos 3 after if\n"; //TODO
     write(socket,&bufferSize,sizeof(int));
 
     read(socket, &msg, sizeof(char));
@@ -160,14 +160,7 @@ void recvMSG(int clientID, std::vector<t> &data){
 // template function have to be defined in the header file
 template<typename t>
 void sendMSG(int clientID, std::vector<t> &data){
-    //TODO
-    for (auto elem : data) {
-
-        std::cout << elem << " ";
-    }
-    std::cout << std::endl;
-
-    //std::cout<<"In sendMSG()"<<data<<"\n"; //TODO
+    
     int dataLen=data.size()*sizeof(t);
     connection_t connection=clientList[clientID];
 

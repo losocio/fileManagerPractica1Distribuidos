@@ -1,87 +1,69 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
-#include <string> //TODO might not be needed
+#include <string>
 #include <vector>
+#include <cstring>
 #include "utils.h"
 #include "fileOperations.h"
 #include "filemanager.h"
 
+#define PORT 60000
 #define FILEMANAGERPATH "./dirprueba/"
 
-/*
-For some reason, the communications are only packaged and then unpackaged
-in a client to server communication and not vice versa
-*/
-
-void handleOperation(int clientId){ //TODO copied code, needs modification
+void handleOperation(int clientId){ 
 	std::vector<unsigned char> rpcIn;
 	
 	recvMSG(clientId, rpcIn);
-
-	//fileOperation_t op;
-	//op=unpackOperation(rpcIn);
-
-	//TODO this might not work
-	FileOperation *op=unpackOperation(rpcIn);
-	//FileOperation *op=new FileOperation();
-	//op=unpackOperation(rpcIn);
 	
+	FileOperation *opRecv=unpackOperation(rpcIn);
+
 	FileManager *fm=new FileManager(FILEMANAGERPATH);
-	std::cout<<"server.cpp: op->opType: "<<op->opType<<"\n"; //TODO
-	//switch(op.opType){
-	switch(op->opType){
-		case opListFiles: //TODO generated code, but i think its done
+	
+	switch(opRecv->opType){
+		case opListFiles: //TODO finish
 		{	
-			std::vector<std::string*>* listedFiles=fm->listFiles();
+			std::vector<std::string*>* resList=fm->listFiles();
 			
-			auto listedFilesAuto=fm->listFiles();
-			/*
-			for (auto elem : listedFilesAuto) {
-        		std::cout << elem << " ";
-    		}
-    			std::cout << std::endl;
-			*/
-			//std::vector<std::string*> listedFiles; //TODO might break something later on and need to be like the previous line
+			for (auto elem : *resList) std::cout << *elem << " "; //TODO testing
+    		std::cout << std::endl; //TODO testing
 
-			//std::cout<<"server.cpp: In case opListFiles: listedFiles reference="<<listedFiles<<"\n"; //TODO
-			std::cout<<"assuming listedFiles is correct cause making printer is tedious\n"; //TODO
+			sendMSG(clientId, *resList);
 
-			//sendMSG(clientId, listedFiles); //TODO mismatched type, gotta check it
-			//sendMSG(clientId, *listedFiles); //TODO how it was before, wrong copilot suggestion
-
-			std::cout<<"sendMSG() succesful\n";
-			/*
-			//TODO generated code
-			std::vector<unsigned char> serializedList = vectorToString(*listedFiles);
-			sendMSG(clientId, serializedList);
-			*/
-
-			//fm->freeListedFiles(listedFiles);
+			fm->freeListedFiles(resList);
 
 			//TODO testing
 			std::cout<<"List files operation succesful\n";
 		}break;
 
-		case opReadFile: //TODO generated code
+		case opReadFile:
 		{
-			/*
-			//TODO change op. to op->
-			std::string readFile;
-			fm->readFile(&op.readFile.fileName, , &op.readFile.dataLength);
-			//void readFile(char* fileName, char* &data, unsigned long int &dataLength);
-			sendMSG(clientId, readFile);
-			*/
+			char* fileName=const_cast<char*>(opRecv->fileName.c_str());
+			char* buffer;
+			unsigned long int dataLength;
+			fm->readFile(fileName, buffer, dataLength);
+			
+			std::string strRead(buffer, dataLength);
+
+			std::vector<unsigned char> resRead;
+			pack(resRead, strRead);
+			sendMSG(clientId, resRead);
 
 			//TODO testing
 			std::cout<<"Read file operation succesful\n";
 		}break;
 
-		case opWriteFile: //TODO generated code
-		{ 	//TODO last parameter is correct, still have to figure out the rest
-			//TODO change op. to op->
-			//fm->writeFile(op.writeFile.fileName, op.writeFile.data, op.writeFile.dataLength);
-			//void writeFile(char* fileName, char* data, unsigned long int dataLength);
+		case opWriteFile:
+		{ 	
+			char* fileName=const_cast<char*>(opRecv->fileName.c_str());
+			char* data=const_cast<char*>(opRecv->data.c_str());
+		
+			unsigned long int dataLength=std::strlen(data);
+
+			
+			fm->writeFile(fileName, data, dataLength);
+			
+			//No need to send anything back, its just write operation
 			
 			//TODO testing
 			std::cout<<"Write file operation succesful\n";
@@ -96,8 +78,8 @@ void handleOperation(int clientId){ //TODO copied code, needs modification
 
 
 int main(int argc, char** argv){
-    //auto serverSocket=initServer(60000); //Not sure why auto is used here
-	int serverSocket=initServer(60000);
+
+	int serverSocket=initServer(PORT);
 
     while(true){
 		

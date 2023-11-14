@@ -14,57 +14,30 @@ class FileOperation{
     fileOperationsEnum_t opType;
 
     //Operation parameters and data
-    union{
-        
-        struct{}listFiles; //No parameters
-        
-        struct{
-            std::string fileName;
-        }readFile;
-
-        struct{
-            std::string fileName;
-            std::string data;
-            unsigned long int dataLength;
-        }writeFile;
-    };
-
-    /*
-    //Default constructor
-    FileOperation(){
-        opType=opListFiles;
-        readFile.fileName="";
-        writeFile.fileName="";  
-        writeFile.data="";
-        writeFile.dataLength=0;
-    }
-    */
+    std::string fileName;
+    std::string data;
+    //unsigned long int dataLength;
 
     //Default constructor
     FileOperation(fileOperationsEnum_t op){
         opType=op;
         switch(op){
             case opListFiles:
-            {
                 //Nothing to copy
-            }break;
+                break;
             
-            case opReadFile:
-            {
-                readFile.fileName = "";
-            }break;
+            case opReadFile:   
+                fileName = ""; 
+                break;
 
             case opWriteFile:
-            {
-                writeFile.fileName = "";
-                writeFile.data = "";
-                writeFile.dataLength = 0;
-            }break;
+                fileName = ""; 
+                data = "";
+                //dataLength = 0;
+                break;
             
             default:
-            {
                 std::cout<<"Error: función no definida\n";
-            }
         }
     }
 
@@ -75,26 +48,20 @@ class FileOperation{
     {
         switch(opType){
             case opListFiles:
-            {
                 //Nothing to copy
-            }break;
+                break;
             
             case opReadFile:
-            {
-                readFile.fileName = other.readFile.fileName;
-            }break;
+                fileName = other.fileName;
+                break;
 
             case opWriteFile:
-            {
-                writeFile.fileName = other.writeFile.fileName;
-                writeFile.data = other.writeFile.data;
-                writeFile.dataLength = other.writeFile.dataLength;
-            }break;
+                fileName = other.fileName;
+                data = other.data;
+                break;
             
             default:
-            {
                 std::cout<<"Error: función no definida\n";
-            }
         }
     }
 
@@ -102,6 +69,7 @@ class FileOperation{
     ~FileOperation(){}
 
 };
+
 /*
 The reason why the default constructor and copy constructor are deleted by the compiler is because 
 the struct contains a union with a std::string member.
@@ -111,75 +79,10 @@ This is why you need to define a default constructor and a copy constructor for 
 */
 
 /*
-//typedef struct __attribute__((packed)){ //TODO I get a warning using this
-typedef struct fileOperation_t{
-    //Operation type
-    fileOperationsEnum_t opType;
-    
-    //Operation parameters and data
-    union{
-        
-        struct{}listFiles; //No parameters
-        
-        struct{
-            std::string fileName;
-        }readFile;
-
-        struct{
-            std::string fileName;
-            std::string data;
-            unsigned long int dataLength;
-        }writeFile;
-    };
-    
-    //Default constructor
-    fileOperation_t(){
-        opType=opListFiles;
-        readFile.fileName="";
-        writeFile.fileName="";  
-        writeFile.data="";
-        writeFile.dataLength=0;
-    }
-    
-    //Copy constructor
-    //Not the way I would like it but it will be unused
-    fileOperation_t(const fileOperation_t& other)
-    : opType(other.opType)
-    {
-        switch (opType) {
-            case opListFiles:
-            {
-                //Nothing to copy
-            }break;
-            
-            case opReadFile:
-            {
-                readFile.fileName = other.readFile.fileName;
-            }break;
-
-            case opWriteFile:
-            {
-                writeFile.fileName = other.writeFile.fileName;
-                writeFile.data = other.writeFile.data;
-                writeFile.dataLength = other.writeFile.dataLength;
-            }break;
-            
-            default:
-            {
-                std::cout<<"Error: función no definida\n";
-            }
-        }
-    }
-
-    //Default destructor
-    ~fileOperation_t(){}
-
-}fileOperation_t;
+Data is transformed into binary data and stored in a vector for communication 
+because data is sent in binary, probably more efficient than using strings
+For whatever reason, unsigned char is used to store binary data
 */
-
-//Data is transformed into binary data and stored in a vector for communication 
-//because data is sent in binary, probably more efficient than using strings
-//For whatever reason, unsigned char is used to store binary data
 
 /*
 This function is used to pack data into a vector
@@ -188,14 +91,21 @@ the new data will be appended to the end of the vector
 */
 template<typename T>
 inline void pack(std::vector<unsigned char> &packet, T data){
-	
+
 	int size=packet.size();
-    //Not sure why this classic C cast doesnt work, new one works
-	//unsigned char *ptr=(unsigned char*)&data;
-    unsigned char *ptr=reinterpret_cast<unsigned char*>(&data);
+	unsigned char *ptr=(unsigned char*)&data;
 	packet.resize(size+sizeof(T));
 	std::copy(ptr, ptr+sizeof(T), packet.begin()+size);
-	
+
+}
+
+template <>
+inline void pack(std::vector<unsigned char> &packet, std::string data){
+    int size=packet.size();
+    unsigned char *ptr=(unsigned char*)data.c_str();
+    int dataSize=data.size()+1;
+    packet.resize(size+dataSize);
+	std::copy(ptr, ptr+dataSize, packet.begin()+size);
 }
 
 //Using vector instead of string because it holds binary data
@@ -203,48 +113,30 @@ inline void packOperation(std::vector<unsigned char> &packet, FileOperation* op)
 
     //Pack the operation type
 
-    //unsigned char opType=op.opType;
-    //unsigned char opType=(unsigned char)op->opType;
-
-    printf("packOperation test: %d\n",__LINE__);
 	pack(packet, op->opType); //No need to cast, taken care of in the pack() function
-    printf("packOperation test: %d\n",__LINE__);
+
 
     //Pack the data depending on the operation type
     //switch(op.opType){
     switch(op->opType){
         case opListFiles: 
-        {
             //In this case there is no data to pack
-
-            //pack(packet, op.listFiles); //TODO might be necessary
-            //pack(packet, op->listFiles); //TODO might be necessary
-        }break;
+            break;
         
         case opReadFile: 
-        {
-            //The struct isnt packed, its contents are packed
+            //The class isnt packed, its contents are packed
             //because we want to minimize the size of the packet
-            //pack(packet, op.readFile.fileName);
-            pack(packet, op->readFile.fileName);
-        }break;
+            pack(packet, op->fileName);
+            break;
 
         case opWriteFile: 
-        {
-            //pack(packet, op.writeFile.fileName);
-            //pack(packet, op.writeFile.data);
-            //pack(packet, op.writeFile.dataLength);
-            
-            pack(packet, op->writeFile.fileName);
-            pack(packet, op->writeFile.data);
-            pack(packet, op->writeFile.dataLength);
-            
-        }break;
+            pack(packet, op->fileName);
+            pack(packet, op->data);
+            //pack(packet, op->dataLength);
+            break;
 
         default:
-        {
             std::cout<<"Error: función no definida\n";
-        }
     }
 }
 
@@ -269,51 +161,59 @@ inline T unpack(std::vector<unsigned char> &packet){
 	return data;
 }
 
-//TODO copied code, needs modification
-//inline FileOperation unpackOperation(std::vector<unsigned char> &packet){
-inline FileOperation* unpackOperation(std::vector<unsigned char> &packet){
+template <>
+inline std::string unpack(std::vector<unsigned char> &packet){
+    std::string data;
+
+    int dataSize = 0;
+    int packetSize=packet.size();
+
+    /*
+    Each iteration it increases dataSize by 1 
+    and takes one char from the vector and appends it to the string
+    It breaks out of the loop when it finds null terminator
+    */
+    for(unsigned char character : packet){
+        dataSize++;
+        if (character == '\0') {
+            break;  //Stop when null terminator is found
+        }
+        data += character;
+    }
+
+    for(int i=dataSize;i<packetSize;i++){
+		packet[i-dataSize]=packet[i];	
+	}
 	
-    //fileOperation_t op;
-    //unsigned char opType=unpack<unsigned char>(packet);
-	//op.opType=(fileOperationsEnum_t)opType;
+	packet.resize(packetSize-dataSize);
+	return data;
+}
 
-	unsigned char opType=unpack<unsigned char>(packet);
-    FileOperation *op=new FileOperation((fileOperationsEnum_t)opType); //TODO cast might be unnecessary
-	//op->opType=(fileOperationsEnum_t)opType;
-	//op.opType=(fileOperationsEnum_t)opType;
+inline FileOperation* unpackOperation(std::vector<unsigned char> &packet){
 
-    //switch(op.opType){
+	fileOperationsEnum_t opType=unpack<fileOperationsEnum_t>(packet);
+
+    FileOperation *op=new FileOperation((fileOperationsEnum_t)opType); //Cast IS necessary
+
 	switch(op->opType){
         case opListFiles:
-        {
             //In this case there is no data to unpack
-
-            //op.listFiles=unpack<struct listFiles>(packet, op.listFiles); //TODO might be necessary, but also wrong
             //op->listFiles=unpack<struct listFiles>(packet, op->listFiles); //TODO might be necessary, but also wrong
-        }break;
+            break;
 
-        case opReadFile: 
-        {   
-            //op.readFile.fileName=unpack<std::string>(packet);
-            op->readFile.fileName=unpack<std::string>(packet);
-        }break;
+        case opReadFile:    
+            op->fileName=unpack<std::string>(packet);
+            break;
 
         case opWriteFile: 
-        {
-            //op.writeFile.fileName=unpack<std::string>(packet);
-            //op.writeFile.data=unpack<std::string>(packet);
-            //op.writeFile.dataLength=unpack<unsigned long int>(packet); //TODO might be unnecessary
-            
-            op->writeFile.fileName=unpack<std::string>(packet);
-            op->writeFile.data=unpack<std::string>(packet);
-            op->writeFile.dataLength=unpack<unsigned long int>(packet); //TODO might be unnecessary
-            
-        }break;
+            //std::cout<<"unpackOperation() is switch case: opWriteFile\n"; //TODO testing
+            op->fileName=unpack<std::string>(packet);
+            op->data=unpack<std::string>(packet);
+            //op->dataLength=unpack<unsigned long int>(packet); //TODO might be unnecessary
+            break;
 
         default:
-		{	
-			std::cout<<"Error: función no definida\n";
-		}		
+			std::cout<<"Error: función no definida\n";		
 	};
 	return op;
 }
