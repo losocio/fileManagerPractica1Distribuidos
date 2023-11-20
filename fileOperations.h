@@ -136,7 +136,7 @@ inline void packOperation(std::vector<unsigned char> &packet, FileOperation* op)
             break;
 
         default:
-            std::cout<<"Error: función no definida\n";
+            std::cout<<"Error: function not defined\n";
     }
 }
 
@@ -198,7 +198,6 @@ inline FileOperation* unpackOperation(std::vector<unsigned char> &packet){
 	switch(op->opType){
         case opListFiles:
             //In this case there is no data to unpack
-            //op->listFiles=unpack<struct listFiles>(packet, op->listFiles); //TODO might be necessary, but also wrong
             break;
 
         case opReadFile:    
@@ -206,14 +205,12 @@ inline FileOperation* unpackOperation(std::vector<unsigned char> &packet){
             break;
 
         case opWriteFile: 
-            //std::cout<<"unpackOperation() is switch case: opWriteFile\n"; //TODO testing
             op->fileName=unpack<std::string>(packet);
             op->data=unpack<std::string>(packet);
-            //op->dataLength=unpack<unsigned long int>(packet); //TODO might be unnecessary
             break;
 
         default:
-			std::cout<<"Error: función no definida\n";		
+			std::cout<<"Error: function not defined\n";		
 	};
 	return op;
 }

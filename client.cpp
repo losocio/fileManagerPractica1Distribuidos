@@ -22,24 +22,25 @@ int main(int argc, char** argv){
         packOperation(rpcOut, opList);
 
         sendMSG(serverConnection.serverId, rpcOut);
-        std::vector<unsigned char> resList;
-        //std::vector<std::string*> resRead;
         
+        std::vector<unsigned char> resList;
+
         recvMSG(serverConnection.serverId, resList);
 
-        //TODO unpack the vector of strings
-        //dont have to use unpackOperation() cause it doesnt have an operation
-        std::vector<std::string> vectorList=unpack<>();
+        std::vector<std::string> vectorList;
+        while(!resList.empty()){
+            vectorList.push_back(unpack<std::string>(resList));
+        }
 
-        std::string strRead=unpack<std::string>(resList); 
-
-        std::cout<<strRead<<"\n";
+        for(auto elem : vectorList) std::cout<<elem<<" ";
+        std::cout<<std::endl;
 
         delete opList;
 
         //Close connection
         closeConnection(serverConnection.serverId);
     }
+
 
 
     //Read file operation
@@ -70,6 +71,7 @@ int main(int argc, char** argv){
     }
 
 
+
     //Write file operation
     {
         connection_t serverConnection=initClient(IP, PORT);
@@ -93,10 +95,14 @@ int main(int argc, char** argv){
         closeConnection(serverConnection.serverId);
     }
     
+
+
     return 0;
 }
 
 /*
+Old main function
+
 int main(int argc, char** argv){
     
     //auto serverConnection=initClient("127.0.0.1", 60000);
@@ -112,13 +118,11 @@ int main(int argc, char** argv){
     
     packOperation(rpcOut, opList);
 
-    sendMSG(serverConnection.serverId, rpcOut); //TODO serverConnection.serverId not same type as what func asks for, might need a cast
+    sendMSG(serverConnection.serverId, rpcOut);
     
     std::vector<std::string*>* resList; 
-    //std::vector<std::string*> resList; //TODO might break something later on and need to be like the previous line
-    recvMSG(serverConnection.serverId, *resList);//TODO mismatched type, might need a cast
-    
-    //TODO the reason why it doesnt continue from here is because the server isnt responding
+    //std::vector<std::string*> resList; 
+    recvMSG(serverConnection.serverId, *resList);
 
 
     //Read files test
@@ -136,7 +140,7 @@ int main(int argc, char** argv){
 
     
     
-    //TODO Write file test
+    //Write file test
 
     //Close connection
     closeConnection(serverConnection.serverId);
