@@ -45,7 +45,7 @@ void handleOperation(int clientId){
 			//Free memory
 			fm->freeListedFiles(filesList);
 
-			std::cout<<"List files operation succesful\n\n";
+			std::cout<<"List files operation succesful!\n\n";
 		}break;
 
 		//Read file operation
@@ -69,7 +69,7 @@ void handleOperation(int clientId){
 			//Send response to the client
 			sendMSG(clientId, resRead);
 
-			std::cout<<"Read file operation succesful\n\n";
+			std::cout<<"Read file operation succesful!\n\n";
 		}break;
 
 		//Write file operation
@@ -87,7 +87,7 @@ void handleOperation(int clientId){
 			
 			//No need to send any response, its just write operation
 			
-			std::cout<<"Write file operation succesful\n\n";
+			std::cout<<"Write file operation succesful!\n\n";
 		}break;
 
 		default:

@@ -2,12 +2,14 @@
 #include <vector>
 #include <string>
 
+//Enum to define the type of operation
 typedef enum fileOperationsEnum_t{
     opListFiles=1,
     opReadFile=2,
     opWriteFile=3
 }fileOperationsEnum_t;
 
+//Class to define the operation
 class FileOperation{
     public:
     //Operation type
@@ -16,9 +18,8 @@ class FileOperation{
     //Operation parameters and data
     std::string fileName;
     std::string data;
-    //unsigned long int dataLength;
 
-    //Default constructor
+    //Default constructor I had to define because the compiler deleted it for whatever reason
     FileOperation(fileOperationsEnum_t op){
         opType=op;
         switch(op){
@@ -33,7 +34,6 @@ class FileOperation{
             case opWriteFile:
                 fileName = ""; 
                 data = "";
-                //dataLength = 0;
                 break;
             
             default:
@@ -41,8 +41,7 @@ class FileOperation{
         }
     }
 
-    //Copy constructor
-    //Not the way I would like it but it will be unused
+    //Copy constructor I had to define because the compiler deleted it for whatever reason
     FileOperation(const FileOperation& other)
     : opType(other.opType)
     {
@@ -71,6 +70,8 @@ class FileOperation{
 };
 
 /*
+Ignore, this is just a note for myself from old code
+
 The reason why the default constructor and copy constructor are deleted by the compiler is because 
 the struct contains a union with a std::string member.
 In C++, if a struct or class contains a member that has a non-trivial default and copy constructors (like std::string),
@@ -85,7 +86,7 @@ For whatever reason, unsigned char is used to store binary data
 */
 
 /*
-This function is used to pack data into a vector
+Template function is used to pack data into a vector
 If the function is called again on the same vector
 the new data will be appended to the end of the vector
 */
@@ -99,6 +100,7 @@ inline void pack(std::vector<unsigned char> &packet, T data){
 
 }
 
+//Implementation of pack for strings
 template <>
 inline void pack(std::vector<unsigned char> &packet, std::string data){
     int size=packet.size();
@@ -108,31 +110,33 @@ inline void pack(std::vector<unsigned char> &packet, std::string data){
 	std::copy(ptr, ptr+dataSize, packet.begin()+size);
 }
 
-//Using vector instead of string because it holds binary data
+//Function that packs the operation type and the data depending on the operation type
 inline void packOperation(std::vector<unsigned char> &packet, FileOperation* op){
 
     //Pack the operation type
-
 	pack(packet, op->opType); //No need to cast, taken care of in the pack() function
 
+    //The class isnt packed, its contents are packed
+    //because we want to minimize the size of the packet
 
     //Pack the data depending on the operation type
-    //switch(op.opType){
     switch(op->opType){
+        //List files operation
         case opListFiles: 
             //In this case there is no data to pack
             break;
         
+        //Read file operation
         case opReadFile: 
-            //The class isnt packed, its contents are packed
-            //because we want to minimize the size of the packet
+            //Pack the fileName
             pack(packet, op->fileName);
             break;
 
+        //Write file operation
         case opWriteFile: 
+            //Pack the fileName and the data
             pack(packet, op->fileName);
             pack(packet, op->data);
-            //pack(packet, op->dataLength);
             break;
 
         default:
@@ -140,9 +144,11 @@ inline void packOperation(std::vector<unsigned char> &packet, FileOperation* op)
     }
 }
 
+
 /*
-This function is used to unpack data from a vector
-its the opposite of pack
+Template function to unpack data from a vector
+If the function is called again on the same vector
+the next data will be unpacked from the beginning of the vector
 */
 template<typename T>
 inline T unpack(std::vector<unsigned char> &packet){	
@@ -161,6 +167,7 @@ inline T unpack(std::vector<unsigned char> &packet){
 	return data;
 }
 
+//Implementation of unpack for strings
 template <>
 inline std::string unpack(std::vector<unsigned char> &packet){
     std::string data;
@@ -189,22 +196,30 @@ inline std::string unpack(std::vector<unsigned char> &packet){
 	return data;
 }
 
+//Function that unpacks the operation type and the data depending on the operation type
 inline FileOperation* unpackOperation(std::vector<unsigned char> &packet){
 
+    //Unpack the operation type
 	fileOperationsEnum_t opType=unpack<fileOperationsEnum_t>(packet);
 
+    //Create a FileOperation object with the unpacked operation type
     FileOperation *op=new FileOperation((fileOperationsEnum_t)opType); //Cast IS necessary
 
 	switch(op->opType){
+        //List files operation
         case opListFiles:
-            //In this case there is no data to unpack
+            //No data to unpack
             break;
 
+        //Read file operation
         case opReadFile:    
+            //Unpack the fileName
             op->fileName=unpack<std::string>(packet);
             break;
 
+        //Write file operation
         case opWriteFile: 
+            //Unpack the fileName and the data
             op->fileName=unpack<std::string>(packet);
             op->data=unpack<std::string>(packet);
             break;
